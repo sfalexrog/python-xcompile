@@ -31,10 +31,10 @@ archs = {
 options = {
            'platforms': ','.join(archs.keys()),
            'ndk-toolchains-dir': '/home/sf/devel/android-toolchains',
-           'ndk-toolchain-suffix': '4.9',
+           'ndk-toolchain-suffix': '',
            'python-source': '/home/sf/devel/cpython-hg',
-           'build-dir': '/home/sf/devel/python/xpython/build',
-           'output-dir': '/home/sf/devel/python/xpython/andpython',
+           'build-dir': '/home/sf/devel/python/xcompile/build',
+           'output-dir': '/home/sf/devel/python/xcompile/andpython',
           }
 
 # These are envvar aliases for options.
@@ -119,6 +119,8 @@ ndk_toolchain_suffix = options['ndk-toolchain-suffix']
 
 envpath = os.environ['PATH']
 
+cpus = os.cpu_count()
+
 # Stage one: build host python
 
 print('Stage 1: Building host python')
@@ -127,7 +129,7 @@ build_cmds = [
 # Uncomment the next line if you want a clean rebuild.
 #              ['make', 'distclean'],
               [py_sourcedir + '/configure', '--enable-shared', '--prefix=' + pyhost_installdir],
-              ['make', '-j4'],
+              ['make', '-j{num}'.format(num = cpus)],
               ['make', 'install']
              ]
 
@@ -161,7 +163,7 @@ print('Stage 2: applying patches to Python source tree')
 os.chdir(py_sourcedir)
 for patchfile in os.listdir(current_dir + '/prepatch'):
     if patchfile.endswith('.patch'):
-        execute_command(['patch -p1 < {patchdir}/{patch}'.format(
+        execute_command(['patch -N -p1 < {patchdir}/{patch}'.format(
             patchdir = current_dir + '/prepatch',
             patch = patchfile)], use_shell = True)
 # Regenerate configure script and headers.
@@ -182,11 +184,11 @@ for arch in archs.keys():
     toolchain_path = '{ndkpath}/{toolchain}'.format(ndkpath=ndk_toolchain_path, toolchain=toolchain)
     os.environ['PATH'] = '{toolpath}/bin:'.format(toolpath=toolchain_path) + envpath
     and_sysroot = '{toolpath}/sysroot'.format(toolpath=toolchain_path)
-    pyand_builddir = current_dir + '/andbuild-{arch}'.format(arch=arch)
-    pyand_installdir = current_dir + '/andpython/{arch}'.format(arch=arch)
+    pyand_builddir = options['build-dir'] + '/andbuild-{arch}'.format(arch=arch)
+    pyand_installdir = options['output-dir'] + '/andpython/{arch}'.format(arch=arch)
     build_cmds = [
 #                  ['cp', '{hostbuild}/Parser/pgen'.format(hostbuild=pyhost_builddir), '{pybuild}/Parser/pgen'.format(pybuild=pyand_builddir)],
-                  ['make', '-j4', 'HOSTPGEN={hostbuild}/Parser/pgen'.format(hostbuild=pyhost_builddir)],
+                  ['make', '-j{num}'.format(num = cpus), 'HOSTPGEN={hostbuild}/Parser/pgen'.format(hostbuild=pyhost_builddir)],
                   ['make', 'install']
                  ]
 # FIXME: Add building position-independent executables without breaking shared library build.
@@ -208,7 +210,7 @@ for arch in archs.keys():
 # Post-patch the build tree
         for patchfile in os.listdir(current_dir + '/postpatch'):
             if patchfile.endswith('.patch'):
-                execute_command(['patch -p1 < {patchdir}/{patch}'.format(
+                execute_command(['patch -N -p1 < {patchdir}/{patch}'.format(
                                  patchdir = current_dir + '/postpatch', patch = patchfile)], 
                                  use_shell = True)
         for cmd in build_cmds:
