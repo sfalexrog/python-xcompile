@@ -1,0 +1,12 @@
+diff -r b4cbecbc0781 Makefile.pre.in
+--- a/Makefile.pre.in	Wed Feb 25 04:15:33 2015 -0800
++++ b/Makefile.pre.in	Fri Mar 27 17:39:49 2015 -0700
+@@ -749,7 +749,7 @@
+ $(GRAMMAR_H): $(GRAMMAR_INPUT) $(PGENSRCS)
+ 		@$(MKDIR_P) Include
+ 		$(MAKE) $(PGEN)
+-		$(PGEN) $(GRAMMAR_INPUT) $(GRAMMAR_H) $(GRAMMAR_C)
++		$(HOSTPGEN) $(GRAMMAR_INPUT) $(GRAMMAR_H) $(GRAMMAR_C)
+ $(GRAMMAR_C): $(GRAMMAR_H) $(GRAMMAR_INPUT) $(PGENSRCS)
+ 		$(MAKE) $(GRAMMAR_H)
+ 		touch $(GRAMMAR_C)
