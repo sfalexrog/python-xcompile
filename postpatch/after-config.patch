@@ -1,0 +1,33 @@
+--- a/pyconfig.h	2014-10-31 16:34:09.497162580 -0500
++++ b/pyconfig.h	2014-11-03 11:45:10.559730948 -0600
+@@ -337,10 +337,10 @@
+ #define HAVE_GETGROUPS 1
+ 
+ /* Define to 1 if you have the `gethostbyname' function. */
+-/* #undef HAVE_GETHOSTBYNAME */
++#define HAVE_GETHOSTBYNAME 1
+ 
+ /* Define this if you have some version of gethostbyname_r() */
+-#define HAVE_GETHOSTBYNAME_R 1
++/* #undef HAVE_GETHOSTBYNAME_R */
+ 
+ /* Define this if you have the 3-arg version of gethostbyname_r(). */
+ /* #undef HAVE_GETHOSTBYNAME_R_3_ARG */
+@@ -349,7 +349,7 @@
+ /* #undef HAVE_GETHOSTBYNAME_R_5_ARG */
+ 
+ /* Define this if you have the 6-arg version of gethostbyname_r(). */
+-#define HAVE_GETHOSTBYNAME_R_6_ARG 1
++/* #undef HAVE_GETHOSTBYNAME_R_6_ARG */
+ 
+ /* Define to 1 if you have the `getitimer' function. */
+ #define HAVE_GETITIMER 1
+@@ -1135,7 +1135,7 @@
+ #define HAVE_WCSCOLL 1
+ 
+ /* Define to 1 if you have the `wcsftime' function. */
+-#define HAVE_WCSFTIME 1
++/* #undef HAVE_WCSFTIME */
+ 
+ /* Define to 1 if you have the `wcsxfrm' function. */
+ #define HAVE_WCSXFRM 1

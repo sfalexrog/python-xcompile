@@ -1,0 +1,1439 @@
+diff -ruN a/configure.ac b/configure.ac
+--- a/configure.ac	2014-10-08 03:18:16.000000000 -0500
++++ b/configure.ac	2015-01-31 16:25:34.666080436 -0600
+@@ -4812,6 +4812,11 @@
+ AC_MSG_RESULT($ENSUREPIP)
+ AC_SUBST(ENSUREPIP)
+ 
++AC_CHECK_MEMBER([struct passwd.pw_gecos],
++          [AC_DEFINE(HAVE_PASSWD_GECOS_FIELD, 1, [Define if <pwd.h> defines field passwd.pw_gecos])],
++          [],
++          [[#include <pwd.h>]])
++
+ # generate output files
+ AC_CONFIG_FILES(Makefile.pre Modules/Setup.config Misc/python.pc Misc/python-config.sh)
+ AC_CONFIG_FILES([Modules/ld_so_aix], [chmod +x Modules/ld_so_aix])
+diff -ruN a/Doc/library/os.rst b/Doc/library/os.rst
+--- a/Doc/library/os.rst	2014-10-08 03:18:11.000000000 -0500
++++ b/Doc/library/os.rst	2015-01-31 16:25:34.670080436 -0600
+@@ -2461,6 +2461,15 @@
+    .. versionadded:: 3.3
+ 
+ 
++.. function :: get_shell()
++
++  Return the path to default shell.
++
++  For unix system returns path to ``sh``, for windows returns path to ``cmd.exe``.
++
++  .. versionadded:: 3.4
++
++
+ Linux extended attributes
+ ~~~~~~~~~~~~~~~~~~~~~~~~~
+ 
+diff -ruN a/FIXLOCALE/langinfo.h b/FIXLOCALE/langinfo.h
+--- a/FIXLOCALE/langinfo.h	1969-12-31 18:00:00.000000000 -0600
++++ b/FIXLOCALE/langinfo.h	2015-01-31 16:25:34.670080436 -0600
+@@ -0,0 +1,110 @@
++#ifndef _LANGINFO_H_
++#define _LANGINFO_H_
++
++#include <sys/cdefs.h>
++
++#ifndef _NL_ITEM_DECLARED
++typedef int       nl_item;
++#define _NL_ITEM_DECLARED
++#endif
++
++#define CODESET         0       /* codeset name */
++#define D_T_FMT         1       /* string for formatting date and time */
++#define D_FMT           2       /* date format string */
++#define T_FMT           3       /* time format string */
++#define T_FMT_AMPM      4       /* a.m. or p.m. time formatting string */
++#define AM_STR          5       /* Ante Meridian affix */
++#define PM_STR          6       /* Post Meridian affix */
++
++/* week day names */
++#define DAY_1           7
++#define DAY_2           8
++#define DAY_3           9
++#define DAY_4           10
++#define DAY_5           11
++#define DAY_6           12
++#define DAY_7           13
++
++/* abbreviated week day names */
++#define ABDAY_1         14
++#define ABDAY_2         15
++#define ABDAY_3         16
++#define ABDAY_4         17
++#define ABDAY_5         18
++#define ABDAY_6         19
++#define ABDAY_7         20
++
++/* month names */
++#define MON_1           21
++#define MON_2           22
++#define MON_3           23
++#define MON_4           24
++#define MON_5           25
++#define MON_6           26
++#define MON_7           27
++#define MON_8           28
++#define MON_9           29
++#define MON_10          30
++#define MON_11          31
++#define MON_12          32
++
++/* abbreviated month names */
++#define ABMON_1         33
++#define ABMON_2         34
++#define ABMON_3         35
++#define ABMON_4         36
++#define ABMON_5         37
++#define ABMON_6         38
++#define ABMON_7         39
++#define ABMON_8         40
++#define ABMON_9         41
++#define ABMON_10        42
++#define ABMON_11        43
++#define ABMON_12        44
++
++#define ERA             45      /* era description segments */
++#define ERA_D_FMT       46      /* era date format string */
++#define ERA_D_T_FMT     47      /* era date and time format string */
++#define ERA_T_FMT       48      /* era time format string */
++#define ALT_DIGITS      49      /* alternative symbols for digits */
++
++#define RADIXCHAR       50      /* radix char */
++#define THOUSEP         51      /* separator for thousands */
++
++#define YESEXPR         52      /* affirmative response expression */
++#define NOEXPR          53      /* negative response expression */
++
++#if __BSD_VISIBLE || __XSI_VISIBLE <= 500
++#define YESSTR          54      /* affirmative response for yes/no queries */
++#define NOSTR           55      /* negative response for yes/no queries */
++#endif
++
++#define CRNCYSTR        56      /* currency symbol */
++
++#if __BSD_VISIBLE
++#define D_MD_ORDER      57      /* month/day order (local extension) */
++#endif
++
++/* standalone months forms for %OB */
++#define ALTMON_1        58
++#define ALTMON_2        59
++#define ALTMON_3        60
++#define ALTMON_4        61
++#define ALTMON_5        62
++#define ALTMON_6        63
++#define ALTMON_7        64
++#define ALTMON_8        65
++#define ALTMON_9        66
++#define ALTMON_10       67
++#define ALTMON_11       68
++#define ALTMON_12       69
++
++#define NL_ITEM_MAX     69      /* largest legal value */
++
++__BEGIN_DECLS
++
++char    *nl_langinfo(nl_item);
++
++__END_DECLS
++
++#endif /* !_LANGINFO_H_ */
+diff -ruN a/FIXLOCALE/locale.h b/FIXLOCALE/locale.h
+--- a/FIXLOCALE/locale.h	1969-12-31 18:00:00.000000000 -0600
++++ b/FIXLOCALE/locale.h	2015-01-31 16:25:34.670080436 -0600
+@@ -0,0 +1,53 @@
++#ifndef _LOCALE_H_
++#define _LOCALE_H_
++
++/* FIXME: 2014-Oct-14, POSIX says locale.h should define NULL */
++
++struct lconv {
++  char    *decimal_point;
++  char    *thousands_sep;
++  char    *grouping;
++  char    *int_curr_symbol;
++  char    *currency_symbol;
++  char    *mon_decimal_point;
++  char    *mon_thousands_sep;
++  char    *mon_grouping;
++  char    *positive_sign;
++  char    *negative_sign;
++  char    int_frac_digits;
++  char    frac_digits;
++  char    p_cs_precedes;
++  char    p_sep_by_space;
++  char    n_cs_precedes;
++  char    n_sep_by_space;
++  char    p_sign_posn;
++  char    n_sign_posn;
++  char    int_p_cs_precedes;
++  char    int_n_cs_precedes;
++  char    int_p_sep_by_space;
++  char    int_n_sep_by_space;
++  char    int_p_sign_posn;
++  char    int_n_sign_posn;
++};
++
++#define LC_ALL          0
++#define LC_COLLATE      1
++#define LC_CTYPE        2
++#define LC_MONETARY     3
++#define LC_NUMERIC      4
++#define LC_TIME         5
++#define LC_MESSAGES     6
++
++#define _LC_LAST        7               /* marks end */
++
++#include <sys/cdefs.h>
++
++__BEGIN_DECLS
++
++struct lconv    *localeconv(void);
++char            *setlocale(int category, const char *locale);
++
++__END_DECLS
++
++#endif /* _LOCALE_H_ */
++
+diff -ruN a/FIXLOCALE/wchar.h b/FIXLOCALE/wchar.h
+--- a/FIXLOCALE/wchar.h	1969-12-31 18:00:00.000000000 -0600
++++ b/FIXLOCALE/wchar.h	2015-01-31 16:25:34.670080436 -0600
+@@ -0,0 +1,316 @@
++/*-
++ * Copyright (c)1999 Citrus Project,
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
++ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
++ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
++ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
++ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
++ * SUCH DAMAGE.
++ *
++ * $FreeBSD: release/9.1.0/include/wchar.h 235785 2012-05-22 14:40:39Z theraven $
++ */
++
++/*-
++ * Copyright (c) 1999, 2000 The NetBSD Foundation, Inc.
++ * All rights reserved.
++ *
++ * This code is derived from software contributed to The NetBSD Foundation
++ * by Julian Coleman.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
++ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
++ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
++ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ *
++ *  $NetBSD: wchar.h,v 1.8 2000/12/22 05:31:42 itojun Exp $
++ */
++
++#ifndef _WCHAR_H_
++#define _WCHAR_H_
++
++#include <sys/cdefs.h>
++#include <sys/_types.h>
++/***************************************************
++ *
++ * get these types from gcc's internal stddef.h
++ *
++ **************************************************/
++#define __need_wchar_t
++#define __need_size_t
++#define __need_NULL
++#define __need_wint_t
++#include <stddef.h>
++
++#ifndef  _MBSTATE_T_DECLARED
++typedef struct {
++  wchar_t       ch;
++  int           want;
++  wchar_t       lbound;
++} mbstate_t;
++#define  _MBSTATE_T_DECLARED
++#endif
++
++#ifndef   WCHAR_MIN 
++#define   WCHAR_MIN  (-2147483647-1)
++#endif
++#ifndef   WCHAR_MAX
++#define   WCHAR_MAX  (2147483647)
++#endif
++#ifndef   WEOF
++#define   WEOF   ((wint_t)-1)
++#endif
++
++#ifndef  _STDFILE_DECLARED
++#define  _STDFILE_DECLARED
++typedef struct __sFILE FILE;
++#endif
++struct tm;
++
++__BEGIN_DECLS
++
++int           mbsinit(  const mbstate_t *);
++wint_t        btowc(    int);
++size_t        wcslen(   const wchar_t *) __pure;
++
++wchar_t      *wcsncat(  wchar_t * __restrict,
++                        const wchar_t * __restrict,
++                        size_t);
++wchar_t      *wcscat(   wchar_t * __restrict,
++                        const wchar_t * __restrict);
++
++wchar_t      *wcsncpy(  wchar_t * __restrict ,
++                        const wchar_t * __restrict,
++                        size_t);
++wchar_t      *wcscpy(   wchar_t * __restrict,
++                        const wchar_t * __restrict);
++
++int           wcsncmp(  const wchar_t *,
++                        const wchar_t *,
++                        size_t) __pure;
++int           wcscmp(   const wchar_t *,
++                        const wchar_t *) __pure;
++
++wchar_t      *wcschr(   const wchar_t *,
++                        wchar_t) __pure;
++wchar_t      *wcsrchr(  const wchar_t *,
++                        wchar_t) __pure;
++size_t        mbrtowc(  wchar_t * __restrict,
++                        const char * __restrict,
++                        size_t,
++                        mbstate_t * __restrict);
++size_t        wcrtomb(  char * __restrict,
++                        wchar_t,
++                        mbstate_t * __restrict);
++
++size_t        mbsnrtowcs(wchar_t * __restrict,
++                         const char ** __restrict,
++                         size_t,
++                         size_t,
++                         mbstate_t * __restrict);
++size_t        mbsrtowcs(wchar_t * __restrict,
++                        const char ** __restrict,
++                        size_t,
++                        mbstate_t * __restrict);
++size_t        wcsnrtombs(char * __restrict,
++                        const wchar_t ** __restrict,
++                        size_t,
++                        size_t,
++                        mbstate_t * __restrict);
++size_t        wcsrtombs(char * __restrict,
++                        const wchar_t ** __restrict,
++                        size_t,
++                        mbstate_t * __restrict);
++
++int           wcscoll(  const wchar_t *,
++                        const wchar_t *);
++size_t        wcsxfrm(  wchar_t * __restrict,
++                        const wchar_t * __restrict,
++                        size_t);
++int           wmemcmp(  const wchar_t *,
++                        const wchar_t *,
++                        size_t) __pure;
++
++
++#if 0 /* the rest of this is not yet implemented */
++size_t        mbrlen(   const char * __restrict,
++                        size_t,
++                        mbstate_t * __restrict);
++
++wint_t        fgetwc(   FILE *);
++wchar_t      *fgetws(   wchar_t * __restrict,
++                        int,
++                        FILE * __restrict);
++wint_t        fputwc(   wchar_t,
++                        FILE *);
++int           fputws(   const wchar_t * __restrict,
++                        FILE * __restrict);
++int           fwide(    FILE *,
++                        int);
++int           fwprintf( FILE * __restrict,
++                        const wchar_t * __restrict,
++                        ...);
++int           fwscanf(  FILE * __restrict,
++                        const wchar_t * __restrict,
++                        ...);
++wint_t        getwc(    FILE *);
++wint_t        getwchar( void);
++wint_t        putwc(    wchar_t,
++                        FILE *);
++wint_t        putwchar( wchar_t);
++int           swprintf( wchar_t * __restrict,
++                        size_t n,
++                        const wchar_t * __restrict,
++                        ...);
++int           swscanf(  const wchar_t * __restrict,
++                        const wchar_t * __restrict,
++                        ...);
++wint_t        ungetwc(  wint_t,
++                        FILE *);
++int           vfwprintf(FILE * __restrict,
++                        const wchar_t * __restrict,
++                        __va_list);
++int           vswprintf(wchar_t * __restrict,
++                        size_t n,
++                        const wchar_t * __restrict,
++                        __va_list);
++int           vwprintf( const wchar_t * __restrict,
++                        __va_list);
++size_t        wcscspn(  const wchar_t *,
++                        const wchar_t *) __pure;
++size_t        wcsftime( wchar_t * __restrict,
++                        size_t,
++                        const wchar_t * __restrict,
++                        const struct tm * __restrict);
++wchar_t      *wcspbrk(  const wchar_t *,
++                        const wchar_t *) __pure;
++size_t        wcsspn(   const wchar_t *,
++                        const wchar_t *) __pure;
++wchar_t      *wcsstr(   const wchar_t * __restrict,
++                        const wchar_t * __restrict) __pure;
++int           wctob(    wint_t);
++double        wcstod(   const wchar_t * __restrict,
++                        wchar_t ** __restrict);
++wchar_t      *wcstok(   wchar_t * __restrict,
++                        const wchar_t * __restrict,
++                        wchar_t ** __restrict);
++long          wcstol(   const wchar_t * __restrict,
++                        wchar_t ** __restrict,
++                        int);
++unsigned long wcstoul(  const wchar_t * __restrict,
++                        wchar_t ** __restrict,
++                        int);
++wchar_t      *wmemchr(  const wchar_t *,
++                        wchar_t,
++                        size_t) __pure;
++wchar_t      *wmemcpy(  wchar_t * __restrict,
++                        const wchar_t * __restrict,
++                        size_t);
++wchar_t      *wmemmove( wchar_t *,
++                        const wchar_t *,
++                        size_t);
++wchar_t      *wmemset(  wchar_t *,
++                        wchar_t,
++                        size_t);
++int           wprintf(  const wchar_t * __restrict,
++                        ...);
++int           wscanf(   const wchar_t * __restrict,
++                        ...);
++
++#ifndef _STDSTREAM_DECLARED
++extern FILE *__stdinp;
++extern FILE *__stdoutp;
++extern FILE *__stderrp;
++#define  _STDSTREAM_DECLARED
++#endif
++
++#define  getwc(fp)     fgetwc(fp)
++#define  getwchar()    fgetwc(__stdinp)
++#define  putwc(wc, fp) fputwc(wc, fp)
++#define  putwchar(wc)  fputwc(wc, __stdoutp)
++
++#if __ISO_C_VISIBLE >= 1999
++int           vfwscanf( FILE * __restrict,
++                        const wchar_t * __restrict,
++                        __va_list);
++int           vswscanf( const wchar_t * __restrict,
++                        const wchar_t * __restrict,
++                        __va_list);
++int           vwscanf(  const wchar_t * __restrict,
++                        __va_list);
++float         wcstof(   const wchar_t * __restrict,
++                        wchar_t ** __restrict);
++long double   wcstold(  const wchar_t * __restrict,
++                        wchar_t ** __restrict);
++
++#ifdef __LONG_LONG_SUPPORTED
++/* LONGLONG */
++long long     wcstoll(  const wchar_t * __restrict,
++                        wchar_t ** __restrict,
++                        int);
++/* LONGLONG */
++unsigned long long wcstoull(const wchar_t * __restrict,
++                            wchar_t ** __restrict,
++                            int);
++#endif
++#endif  /* __ISO_C_VISIBLE >= 1999 */
++
++#if __XSI_VISIBLE
++int           wcswidth( const wchar_t *,
++                        size_t);
++int           wcwidth(  wchar_t);
++#define  wcwidth(_c)  __wcwidth(_c)
++#endif
++
++#if __POSIX_VISIBLE >= 200809 || __BSD_VISIBLE
++wchar_t      *wcpcpy(    wchar_t * __restrict,
++                         const wchar_t * __restrict);
++wchar_t      *wcpncpy(   wchar_t * __restrict,
++                         const wchar_t * __restrict,
++                         size_t);
++wchar_t      *wcsdup(    const wchar_t *) __malloc_like;
++int           wcscasecmp(const wchar_t *,
++                         const wchar_t *);
++int           wcsncasecmp(const wchar_t *,
++                          const wchar_t *,
++                          size_t n);
++size_t        wcsnlen(   const wchar_t *,
++                         size_t) __pure;
++#endif
++
++#endif /* end of things not implemented yet */
++
++__END_DECLS
++
++#endif /* !_WCHAR_H_ */
+diff -ruN a/Lib/os.py b/Lib/os.py
+--- a/Lib/os.py	2014-10-08 03:18:12.000000000 -0500
++++ b/Lib/os.py	2015-01-31 16:25:34.670080436 -0600
+@@ -978,3 +978,21 @@
+         raise TypeError("invalid fd type (%s, expected integer)" % type(fd))
+     import io
+     return io.open(fd, *args, **kwargs)
++
++if name == "posix":
++    def get_shell():
++        """Return the path to default shell for Unix."""
++        for path in confstr("CS_PATH").split(pathsep):
++            sh = sep.join((path, "sh"))
++            try:
++                mode = stat(sh).st_mode
++            except OSError:
++                pass
++            else:
++                if st.S_ISREG(mode):
++                    return sh
++        raise FileNotFound("sh")
++elif name in {"nt", "ce"}:
++    def get_shell():
++        """Return the path to default shell for Windows."""
++        return environ.get("COMSPEC", "cmd.exe")
+diff -ruN a/Lib/subprocess.py b/Lib/subprocess.py
+--- a/Lib/subprocess.py	2014-10-08 03:18:12.000000000 -0500
++++ b/Lib/subprocess.py	2015-01-31 16:25:34.670080436 -0600
+@@ -1344,7 +1344,8 @@
+                 args = list(args)
+ 
+             if shell:
+-                args = ["/bin/sh", "-c"] + args
++                shell_executable_name = os.get_shell()
++                args = [shell_executable_name, "-c"] + args
+                 if executable:
+                     args[0] = executable
+ 
+diff -ruN a/Lib/test/test_os.py b/Lib/test/test_os.py
+--- a/Lib/test/test_os.py	2014-10-08 03:18:13.000000000 -0500
++++ b/Lib/test/test_os.py	2015-01-31 16:25:34.670080436 -0600
+@@ -2510,6 +2510,19 @@
+         self.assertEqual(os.get_inheritable(slave_fd), False)
+ 
+ 
++
++class TestGetShell(unittest.TestCase):
++    def test_get_shell(self):
++        shell = os.get_shell()
++        param = "/c" if sys.platform == 'win32' else "-c"
++        s = subprocess.Popen([shell, param, "echo test"],
++                                stdout=subprocess.PIPE)
++        stdout, stderr = s.communicate()
++        self.assertIn(b"test", stdout)
++        self.assertIsNone(stderr)
++        self.assertEqual(0, s.returncode)
++
++
+ @support.reap_threads
+ def test_main():
+     support.run_unittest(
+diff -ruN a/Modules/_localemodule.c b/Modules/_localemodule.c
+--- a/Modules/_localemodule.c	2014-10-08 03:18:15.000000000 -0500
++++ b/Modules/_localemodule.c	2015-01-31 16:25:34.670080436 -0600
+@@ -40,6 +40,219 @@
+ 
+ PyDoc_STRVAR(locale__doc__, "Support for POSIX locales.");
+ 
++/****************************************************************
++ *
++ * This section
++ * Copyright 2013 Intel Corporation, All Rights Reserved.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License"); you
++ * may not use this file except in compliance with the License.  You
++ * may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
++ * implied.  See the License for the specific language governing
++ * permissions and limitations under the License.
++ *
++ *****************************************************************/
++
++/****************************************************************
++ *
++ * The following functions: localconv(), setlocale(), nl_langinfo()
++ * are missing from Android's Bionic libc.  These are here only to
++ * make compilation of Python for Android succeed.
++ *
++ * A different solution (based on testing HAVE_LANGINFO_H) is in the
++ * works and will replace this eventually.)
++ *
++ ***************************************************************/
++
++#if defined(__ANDROID__)
++
++
++/************************************************************
++ *
++ * localeconv()
++ *
++ ***********************************************************/
++
++static
++struct lconv
++theLconv = {
++  .decimal_point = ".",
++  .thousands_sep = "",
++  .grouping = "",
++  .int_curr_symbol = "",
++  .currency_symbol = "",
++  .mon_decimal_point = "",
++  .mon_thousands_sep = "",
++  .mon_grouping = "",
++  .positive_sign = "",
++  .negative_sign = "",
++
++  .int_frac_digits = 0x7f,
++  .frac_digits = 0x7f,
++  .p_cs_precedes = 0x7f,
++  .p_sep_by_space = 0x7f,
++  .n_cs_precedes = 0x7f,
++  .n_sep_by_space = 0x7f,
++  .p_sign_posn = 0x7f,
++  .n_sign_posn = 0x7f,
++  .int_p_cs_precedes = 0x7f,
++  .int_n_cs_precedes = 0x7f,
++  .int_p_sep_by_space = 0x7f,
++  .int_n_sep_by_space = 0x7f,
++  .int_p_sign_posn = 0x7f,
++  .int_n_sign_posn = 0x7f
++};
++
++struct lconv *
++localeconv(void)
++{
++  return &theLconv;
++}
++
++
++/************************************************************
++ *
++ * setlocale()
++ *
++ ***********************************************************/
++
++static char* theLocale = "C";
++
++#include <string.h>             /* for strncmp() */
++
++char *
++setlocale(int category,
++          const char *locale)
++{
++  // FIXME 2014-Oct-15: This is a total hack!!!
++
++  if ((category < LC_ALL) || (category >= _LC_LAST)) return 0;
++  if ((locale == 0)                      ||
++      (strncmp(locale, "",      1) == 0) || /* pretend that the LANG envvar contains "POSIX" or "C" (or is unset) */
++      (strncmp(locale, "C",     2) == 0) ||
++      (strncmp(locale, "POSIX", 6) == 0))
++    return theLocale;
++
++  // we don't know about any other locales
++  return 0;
++}
++
++
++/************************************************************
++ *
++ * nl_langinfo()
++ *
++ ***********************************************************/
++
++static char* const langinfoTable[]; /* defined at end of file */
++
++char*
++nl_langinfo(nl_item itemId)
++{
++  if ((itemId > NL_ITEM_MAX) || (itemId < 0)) return "";
++  return langinfoTable[itemId];
++}
++
++static char* const langinfoTable[] = {
++  "ANSI_X3.4-1968",       // CODESET      0 -- codeset name
++  "%a %b %e %H:%M:%S %Y", // D_T_FMT      1 -- string for formatting date and time
++  "%m/%d/%y",             // D_FMT        2 -- date format string
++  "%H:%M:%S",             // T_FMT        3 -- time format string
++  "%I:%M:%S %p",          // T_FMT_AMPM   4 -- a.m. or p.m. time formatting string
++  "AM",                   // AM_STR       5 -- Ante Meridian affix
++  "PM",                   // PM_STR       6 -- Post Meridian affix
++
++  /* week day names */
++  "Sunday",               // DAY_1        7
++  "Monday",               // DAY_2        8
++  "Tuesday",              // DAY_3        9
++  "Wednesday",            // DAY_4       10
++  "Thursday",             // DAY_5       11
++  "Friday",               // DAY_6       12
++  "Saturday",             // DAY_7       13
++
++  /* abbreviated week day names */
++  "Sun",                  // ABDAY_1     14
++  "Mon",                  // ABDAY_2     15
++  "Tue",                  // ABDAY_3     16
++  "Wed",                  // ABDAY_4     17
++  "Thu",                  // ABDAY_5     18
++  "Fri",                  // ABDAY_6     19
++  "Sat",                  // ABDAY_7     20
++
++  /* month names */
++  "January",              // MON_1       21
++  "February",             // MON_2       22
++  "March",                // MON_3       23
++  "April",                // MON_4       24
++  "May",                  // MON_5       25
++  "June",                 // MON_6       26
++  "July",                 // MON_7       27
++  "August",               // MON_8       28
++  "September",            // MON_9       29
++  "October",              // MON_10      30
++  "November",             // MON_11      31
++  "December",             // MON_12      32
++
++  /* abbreviated month names */
++  "Jan",                  // ABMON_1     33
++  "Feb",                  // ABMON_2     34
++  "Mar",                  // ABMON_3     35
++  "Apr",                  // ABMON_4     36
++  "May",                  // ABMON_5     37
++  "Jun",                  // ABMON_6     38
++  "Jul",                  // ABMON_7     39
++  "Aug",                  // ABMON_8     40
++  "Sep",                  // ABMON_9     41
++  "Oct",                  // ABMON_10    42
++  "Nov",                  // ABMON_11    43
++  "Dec",                  // ABMON_12    44
++
++  "",                     // ERA         45 -- era description segments
++  "",                     // ERA_D_FMT   46 -- era date format string
++  "",                     // ERA_D_T_FMT 47 -- era date and time format string
++  "",                     // ERA_T_FMT   48 -- era time format string
++  "",                     // ALT_DIGITS  49 -- alternative symbols for digits
++
++  ".",                    // RADIXCHAR   50 -- radix char
++  "",                     // THOUSEP     51 -- separator for thousands
++
++  "^[yY]",                // YESEXPR     52 -- affirmative response expression
++  "^[nN]",                // NOEXPR      53 -- negative response expression
++
++  "",                     // YESSTR      54 -- affirmative response for yes/no queries
++  "",                     // NOSTR       55 -- negative response for yes/no queries
++
++  "",                     // CRNCYSTR    56 -- currency symbol
++
++  "",                     // D_MD_ORDER  57 -- month/day order (local extension)
++
++  /* standalone months forms for %OB */
++  "",                     // ALTMON_1    58
++  "",                     // ALTMON_2    59
++  "",                     // ALTMON_3    60
++  "",                     // ALTMON_4    61
++  "",                     // ALTMON_5    62
++  "",                     // ALTMON_6    63
++  "",                     // ALTMON_7    64
++  "",                     // ALTMON_8    65
++  "",                     // ALTMON_9    66
++  "",                     // ALTMON_10   67
++  "",                     // ALTMON_11   68
++  "",                     // ALTMON_12   69
++  "","","","","","","","" // a few extras just for padding
++};
++
++#endif /* __ANDROID__ */
++
++
++
+ static PyObject *Error;
+ 
+ /* support functions for formatting floating point numbers */
+@@ -678,6 +891,490 @@
+     return m;
+ }
+ 
++/****************************************************************
++ *
++ * This section
++ * Copyright 2013 Intel Corporation, All Rights Reserved.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License"); you
++ * may not use this file except in compliance with the License.  You
++ * may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
++ * implied.  See the License for the specific language governing
++ * permissions and limitations under the License.
++ *
++ *****************************************************************/
++
++/*-
++ * Copyright (c) 2002-2004 Tim J. Robbins.
++ * All rights reserved.
++ *
++ * Copyright (c) 2011 The FreeBSD Foundation
++ * All rights reserved.
++ * Portions of this software were developed by David Chisnall
++ * under sponsorship from the FreeBSD Foundation.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
++ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
++ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
++ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
++ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
++ * SUCH DAMAGE.
++ */
++
++#if defined(__ANDROID__)
++
++/****************************************************************
++ *
++ * The following functions: mbsinit(), mbrtowc(), mbsnrtowcs(),
++ * wcrtomb(), wcsnrtombs(), mbsrtowcs(), wcsrtombs(), mbstowcs(),
++ * wcstombs() are missing from Android's Bionic libc.  These are here
++ * only to make compilation of Python for Android succeed.
++ *
++ * Much of the following code is borrowed from the locale
++ * implementation in the FreeBSD libc.
++ *
++ * A different solution (not involving code from FreeBSD, but rather
++ * calling out to equivalent mbs/wcs functions already in the CPython
++ * code base) is in the works and will replace this eventually.
++ * 
++ **********************************************************/
++
++/************************************************************
++ *
++ * mbstowcs and wcstombs hacks
++ *
++ ***********************************************************/
++
++#include <stdlib.h>             /* prototypes */
++#include <stdint.h>
++
++int
++mbsinit(const mbstate_t *ps)
++{
++  return (ps == NULL || ps->want == 0);
++}
++
++#define	LOCALE_MIN(a,b) (((a)<(b))?(a):(b))
++
++size_t
++mbrtowc(   wchar_t* pwc,
++        const char* s,
++            size_t  n,
++         mbstate_t* ps)
++{
++  int ch, i, mask, want;
++  wchar_t lbound, wch;
++
++  if (ps->want < 0 || ps->want > 6) {
++    errno = EINVAL;
++    return ((size_t)-1);
++  }
++
++  if (s == NULL) {
++    s = "";
++    n = 1;
++    pwc = NULL;
++  }
++
++  if (n == 0)
++    /* Incomplete multibyte sequence */
++    return ((size_t)-2);
++
++  if (ps->want == 0 && ((ch = (uint8_t)*s) & ~0x7f) == 0) {
++    /* Fast path for plain ASCII characters. */
++    if (pwc != NULL)
++      *pwc = ch;
++    return (ch != '\0' ? 1 : 0);
++  }
++
++  if (ps->want == 0) {
++    /*
++     * Determine the number of octets that make up this character
++     * from the first octet, and a mask that extracts the
++     * interesting bits of the first octet. We already know
++     * the character is at least two bytes long.
++     *
++     * We also specify a lower bound for the character code to
++     * detect redundant, non-"shortest form" encodings. For
++     * example, the sequence C0 80 is _not_ a legal representation
++     * of the null character. This enforces a 1-to-1 mapping
++     * between character codes and their multibyte representations.
++     */
++    ch = (uint8_t)*s;
++    if ((ch & 0x80) == 0) {
++      mask = 0x7f;
++      want = 1;
++      lbound = 0;
++    } else if ((ch & 0xe0) == 0xc0) {
++      mask = 0x1f;
++      want = 2;
++      lbound = 0x80;
++    } else if ((ch & 0xf0) == 0xe0) {
++      mask = 0x0f;
++      want = 3;
++      lbound = 0x800;
++    } else if ((ch & 0xf8) == 0xf0) {
++      mask = 0x07;
++      want = 4;
++      lbound = 0x10000;
++    } else if ((ch & 0xfc) == 0xf8) {
++      mask = 0x03;
++      want = 5;
++      lbound = 0x200000;
++    } else if ((ch & 0xfe) == 0xfc) {
++      mask = 0x01;
++      want = 6;
++      lbound = 0x4000000;
++    } else {
++      /*
++       * Malformed input; input is not UTF-8.
++       */
++      errno = EILSEQ;
++      return ((size_t)-1);
++    }
++  } else {
++    want = ps->want;
++    lbound = ps->lbound;
++  }
++
++  /*
++   * Decode the octet sequence representing the character in chunks
++   * of 6 bits, most significant first.
++   */
++  if (ps->want == 0)
++    wch = (uint8_t)*s++ & mask;
++  else
++    wch = ps->ch;
++  for (i = (ps->want == 0) ? 1 : 0; i < LOCALE_MIN(want, n); i++) {
++    if ((*s & 0xc0) != 0x80) {
++      /*
++       * Malformed input; bad characters in the middle
++       * of a character.
++       */
++      errno = EILSEQ;
++      return ((size_t)-1);
++    }
++    wch <<= 6;
++    wch |= *s++ & 0x3f;
++  }
++  if (i < want) {
++    /* Incomplete multibyte sequence. */
++    ps->want = want - i;
++    ps->lbound = lbound;
++    ps->ch = wch;
++    return ((size_t)-2);
++  }
++  if (wch < lbound) {
++    /*
++     * Malformed input; redundant encoding.
++     */
++    errno = EILSEQ;
++    return ((size_t)-1);
++  }
++  if (pwc != NULL)
++    *pwc = wch;
++  ps->want = 0;
++  return (wch == L'\0' ? 0 : want);
++}
++
++size_t
++mbsnrtowcs(   wchar_t*  dst,
++           const char** src,
++               size_t   nms,
++               size_t   len,
++            mbstate_t*  ps)
++{
++  const char *s;
++  size_t nchr;
++  wchar_t wc;
++  size_t nb;
++
++  s = *src;
++  nchr = 0;
++
++  if (dst == NULL) {
++    /*
++     * The fast path in the loop below is not safe if an ASCII
++     * character appears as anything but the first byte of a
++     * multibyte sequence. Check now to avoid doing it in the loop.
++     */
++    if (nms > 0 && ps->want > 0 && (int8_t)*s > 0) {
++      errno = EILSEQ;
++      return ((size_t)-1);
++    }
++    for (;;) {
++      if (nms > 0 && (int8_t)*s > 0)
++        /*
++         * Fast path for plain ASCII characters
++         * excluding NUL.
++         */
++        nb = 1;
++      else if ((nb = mbrtowc(&wc, s, nms, ps)) ==
++               (size_t)-1)
++        /* Invalid sequence - mbrtowc() sets errno. */
++        return ((size_t)-1);
++      else if (nb == 0 || nb == (size_t)-2)
++        return (nchr);
++      s += nb;
++      nms -= nb;
++      nchr++;
++    }
++    /*NOTREACHED*/
++  }
++
++  /*
++   * The fast path in the loop below is not safe if an ASCII
++   * character appears as anything but the first byte of a
++   * multibyte sequence. Check now to avoid doing it in the loop.
++   */
++  if (nms > 0 && len > 0 && ps->want > 0 && (int8_t)*s > 0) {
++    errno = EILSEQ;
++    return ((size_t)-1);
++  }
++  while (len-- > 0) {
++    if (nms > 0 && (int8_t)*s > 0) {
++      /*
++       * Fast path for plain ASCII characters
++       * excluding NUL.
++       */
++      *dst = (wchar_t)*s;
++      nb = 1;
++    } else if ((nb = mbrtowc(dst, s, nms, ps)) ==
++               (size_t)-1) {
++      *src = s;
++      return ((size_t)-1);
++    } else if (nb == (size_t)-2) {
++      *src = s + nms;
++      return (nchr);
++    } else if (nb == 0) {
++      *src = NULL;
++      return (nchr);
++    }
++    s += nb;
++    nms -= nb;
++    nchr++;
++    dst++;
++  }
++  *src = s;
++  return (nchr);
++}
++
++size_t
++wcrtomb(     char* s,
++          wchar_t  wc,
++        mbstate_t* ps)
++{
++  uint8_t lead;
++  int i, len;
++
++  if (ps->want != 0) {
++    errno = EINVAL;
++    return ((size_t)-1);
++  }
++
++  if (s == NULL)
++    /* Reset to initial shift state (no-op) */
++    return (1);
++
++  if ((wc & ~0x7f) == 0) {
++    /* Fast path for plain ASCII characters. */
++    *s = (char)wc;
++    return (1);
++  }
++
++  /*
++   * Determine the number of octets needed to represent this character.
++   * We always output the shortest sequence possible. Also specify the
++   * first few bits of the first octet, which contains the information
++   * about the sequence length.
++   */
++  if ((wc & ~0x7f) == 0) {
++    lead = 0;
++    len = 1;
++  } else if ((wc & ~0x7ff) == 0) {
++    lead = 0xc0;
++    len = 2;
++  } else if ((wc & ~0xffff) == 0) {
++    lead = 0xe0;
++    len = 3;
++  } else if ((wc & ~0x1fffff) == 0) {
++    lead = 0xf0;
++    len = 4;
++  } else if ((wc & ~0x3ffffff) == 0) {
++    lead = 0xf8;
++    len = 5;
++  } else if ((wc & ~0x7fffffff) == 0) {
++    lead = 0xfc;
++    len = 6;
++  } else {
++    errno = EILSEQ;
++    return ((size_t)-1);
++  }
++
++  /*
++   * Output the octets representing the character in chunks
++   * of 6 bits, least significant last. The first octet is
++   * a special case because it contains the sequence length
++   * information.
++   */
++  for (i = len - 1; i > 0; i--) {
++    s[i] = (wc & 0x3f) | 0x80;
++    wc >>= 6;
++  }
++  *s = (wc & 0xff) | lead;
++
++  return (len);
++}
++
++#if defined(MB_LEN_MAX)
++#undef MB_LEN_MAX
++#endif
++
++#define MB_LEN_MAX 7
++
++size_t
++wcsnrtombs(         char*  dst,
++           const wchar_t** src,
++                  size_t   nwc,
++                  size_t   len,
++               mbstate_t*  ps)
++{
++  char buf[MB_LEN_MAX];
++  const wchar_t *s;
++  size_t nbytes;
++  size_t nb;
++
++  if (ps->want != 0) {
++    errno = EINVAL;
++    return ((size_t)-1);
++  }
++
++  s = *src;
++  nbytes = 0;
++
++  if (dst == NULL) {
++    while (nwc-- > 0) {
++      if (0 <= *s && *s < 0x80)
++        /* Fast path for plain ASCII characters. */
++        nb = 1;
++      else if ((nb = wcrtomb(buf, *s, ps)) ==
++               (size_t)-1)
++        /* Invalid character - wcrtomb() sets errno. */
++        return ((size_t)-1);
++      if (*s == L'\0')
++        return (nbytes + nb - 1);
++      s++;
++      nbytes += nb;
++    }
++    return (nbytes);
++  }
++
++  while (len > 0 && nwc-- > 0) {
++    if (0 <= *s && *s < 0x80) {
++      /* Fast path for plain ASCII characters. */
++      nb = 1;
++      *dst = *s;
++    } else if (len > (size_t)MB_CUR_MAX) {
++      /* Enough space to translate in-place. */
++      if ((nb = wcrtomb(dst, *s, ps)) == (size_t)-1) {
++        *src = s;
++        return ((size_t)-1);
++      }
++    } else {
++      /*
++       * May not be enough space; use temp. buffer.
++       */
++      if ((nb = wcrtomb(buf, *s, ps)) == (size_t)-1) {
++        *src = s;
++        return ((size_t)-1);
++      }
++      if (nb > (int)len)
++        /* MB sequence for character won't fit. */
++        break;
++      memcpy(dst, buf, nb);
++    }
++    if (*s == L'\0') {
++      *src = NULL;
++      return (nbytes + nb - 1);
++    }
++    s++;
++    dst += nb;
++    len -= nb;
++    nbytes += nb;
++  }
++  *src = s;
++  return (nbytes);
++}
++
++size_t
++mbsrtowcs(   wchar_t*  dst,
++          const char** src,
++              size_t   len,
++           mbstate_t*  ps)
++{
++  return (mbsnrtowcs(dst, src, __SIZE_MAX__, len, ps));
++}
++
++size_t
++wcsrtombs(         char*  dst,
++          const wchar_t** src,
++                 size_t   len,
++              mbstate_t*  ps)
++{
++  return (wcsnrtombs(dst, src, __SIZE_MAX__, len, ps));
++}
++
++
++size_t
++mbstowcs(   wchar_t* pwcs,
++         const char* s,
++             size_t  n)
++{
++  static const mbstate_t initial; /* initialized to 0 */
++  mbstate_t mbs;
++  const char *sp;
++
++  mbs = initial;
++  sp = s;
++  return (mbsnrtowcs(pwcs, &sp, __SIZE_MAX__, n, &mbs));
++}
++
++size_t
++wcstombs(         char* s,
++         const wchar_t* pwcs,
++                size_t  n)
++{
++  static const mbstate_t initial; /* initialized to 0 */
++  mbstate_t mbs;
++  const wchar_t *pwcsp;
++
++  mbs = initial;
++  pwcsp = pwcs;
++  return (wcsnrtombs(s, &pwcsp, __SIZE_MAX__, n, &mbs));
++}
++
++#endif /* __ANDROID__ */
++
+ /*
+ Local variables:
+ c-basic-offset: 4
+diff -ruN a/Modules/posixmodule.c b/Modules/posixmodule.c
+--- a/Modules/posixmodule.c	2014-10-08 03:18:15.000000000 -0500
++++ b/Modules/posixmodule.c	2015-01-31 16:51:50.874052866 -0600
+@@ -9547,6 +9547,71 @@
+ }
+ #endif
+ 
++/****************************************************************
++ *
++ * This section
++ * Copyright 2013 Intel Corporation, All Rights Reserved.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License"); you
++ * may not use this file except in compliance with the License.  You
++ * may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
++ * implied.  See the License for the specific language governing
++ * permissions and limitations under the License.
++ *
++ *****************************************************************/
++#if !defined(HAVE_CONFSTR)
++#define HAVE_CONFSTR 1
++
++/************************************************************
++ *
++ * confstr() is missing from Android's Bionic libc.  This gives the
++ * default value for the _CS_PATH variable, which is needed to do any
++ * kind of subshell or forking.
++ *
++ ***********************************************************/
++
++#ifndef _CS_PATH
++#define _CS_PATH 1
++#endif
++
++size_t
++confstr(int name,
++        char *buf,
++        size_t len)
++{
++#if defined(__ANDROID__)
++  const char cs_path[] = "/system/bin:/system/xbin";
++#else
++  /* this should work on most legacy Unices (Solaris and HPUX use
++   * /usr/xpg4/bin, most others don't have that directory and instead
++   * use /bin:/usr/bin) */
++  const char cs_path[] = "/usr/xpg4/bin:/bin:/usr/bin";
++#endif
++  const int cs_path_len = sizeof(cs_path);
++
++  if (name == _CS_PATH) {
++    if ((len > 0) && (buf != 0)) {
++      strncpy(buf, cs_path, len);
++      if (len < cs_path_len) {
++        buf[len-1]='\0';        /* null terminate truncated string */
++      }
++    }
++    return cs_path_len;
++  }
++  else {                        /* unknown variable */
++    return 0;                   /* FIXME: should also set errno to EINVAL */
++  }
++
++}
++
++#endif  /* CONFSTR for ANDROID */
++
+ #ifdef HAVE_CONFSTR
+ static struct constdef posix_constants_confstr[] = {
+ #ifdef _CS_ARCHITECTURE
+diff -ruN a/Modules/pwdmodule.c b/Modules/pwdmodule.c
+--- a/Modules/pwdmodule.c	2014-10-08 03:18:15.000000000 -0500
++++ b/Modules/pwdmodule.c	2015-01-31 16:25:34.686080436 -0600
+@@ -72,7 +72,12 @@
+     SETS(setIndex++, p->pw_passwd);
+     PyStructSequence_SET_ITEM(v, setIndex++, _PyLong_FromUid(p->pw_uid));
+     PyStructSequence_SET_ITEM(v, setIndex++, _PyLong_FromGid(p->pw_gid));
++#if defined(HAVE_PASSWD_GECOS_FIELD)
+     SETS(setIndex++, p->pw_gecos);
++#else
++    SETS(setIndex++, Py_None);
++    Py_INCREF(Py_None);
++#endif
+     SETS(setIndex++, p->pw_dir);
+     SETS(setIndex++, p->pw_shell);
+ 
+diff -ruN a/setup.py b/setup.py
+--- a/setup.py	2014-10-08 03:18:16.000000000 -0500
++++ b/setup.py	2015-01-31 16:25:34.686080436 -0600
+@@ -574,7 +574,8 @@
+                                libraries=math_libs) )
+ 
+         # time libraries: librt may be needed for clock_gettime()
+-        time_libs = []
++        # floatsleep() needs math_libs for fmod() and floor()
++        time_libs = list(math_libs)
+         lib = sysconfig.get_config_var('TIMEMODULE_LIB')
+         if lib:
+             time_libs.append(lib)
+@@ -631,7 +632,9 @@
+             missing.append('spwd')
+ 
+         # select(2); not on ancient System V
+-        exts.append( Extension('select', ['selectmodule.c']) )
++        # pyepoll_poll needs math_libs for ceil()
++        exts.append( Extension('select', ['selectmodule.c'],
++                               libraries=math_libs) )
+ 
+         # Fred Drake's interface to the Python parser
+         exts.append( Extension('parser', ['parsermodule.c']) )
+@@ -655,7 +658,10 @@
+         # Operations on audio samples
+         # According to #993173, this one should actually work fine on
+         # 64-bit platforms.
+-        exts.append( Extension('audioop', ['audioop.c']) )
++
++        # audioop needs math_libs for floor() in multiple functions.
++        exts.append( Extension('audioop', ['audioop.c'],
++                               libraries=math_libs) )
+ 
+         # readline
+         do_readline = self.compiler.find_library_file(lib_dirs, 'readline')
+@@ -1927,8 +1933,10 @@
+                         libraries=[],
+                         sources=sources,
+                         depends=depends)
++        # function my_sqrt() needs math library for sqrt()
+         ext_test = Extension('_ctypes_test',
+-                             sources=['_ctypes/_ctypes_test.c'])
++                             sources=['_ctypes/_ctypes_test.c'],
++                             libraries=['m'])
+         self.extensions.extend([ext, ext_test])
+ 
+         if not '--with-system-ffi' in sysconfig.get_config_var("CONFIG_ARGS"):
