@@ -79,7 +79,7 @@ def loadopts():
     for optname in options.keys():
         if envvar_aliases[optname] in os.environ.keys():
             options[optname] = os.environ[envvar_aliases[optname]]
-    parser = argparse.ArgumentParser(description='A test program to see how argparse works')
+    parser = argparse.ArgumentParser(description='A script to build Python for Android for a provided set of platforms.')
     parser.add_argument('--ndk-toolchains-dir', help='Path to ndk standalone toolchains', metavar='PATH/TO/ANDROID/TOOLCHAINS')
     parser.add_argument('--ndk-toolchain-suffix', help='Toolchain directory suffix, usually the compiler version', metavar='4.9')
     parser.add_argument('--platforms', help='Comma-separated list of target platforms', metavar='arm,x86,mips')
