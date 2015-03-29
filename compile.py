@@ -201,7 +201,7 @@ for arch in archs.keys():
     os.environ['PATH'] = '{toolpath}/bin:'.format(toolpath=toolchain_path) + envpath
     and_sysroot = '{toolpath}/sysroot'.format(toolpath=toolchain_path)
     pyand_builddir = options['build-dir'] + '/andbuild-{arch}'.format(arch=arch)
-    pyand_installdir = options['output-dir'] + '/andpython/{arch}'.format(arch=arch)
+    pyand_installdir = options['output-dir'] + '/{arch}'.format(arch=arch)
     build_cmds = [
 #                  ['cp', '{hostbuild}/Parser/pgen'.format(hostbuild=pyhost_builddir), '{pybuild}/Parser/pgen'.format(pybuild=pyand_builddir)],
                   ['make', '-j{num}'.format(num = cpus), 'HOSTPGEN={hostbuild}/Parser/pgen'.format(hostbuild=pyhost_builddir)],
