@@ -31,7 +31,7 @@ archs = {
 options = {
            'platforms': ','.join(archs.keys()),
            'ndk-toolchains-dir': '/home/sf/devel/android-toolchains',
-           'ndk-toolchain-suffix': '',
+           'ndk-toolchain-suffix': ' ',
            'python-source': '/home/sf/devel/cpython-hg',
            'build-dir': '/home/sf/devel/python/xcompile/build',
            'output-dir': '/home/sf/devel/python/xcompile/andpython',
@@ -47,6 +47,22 @@ envvar_aliases = {
                   'build-dir': 'BUILD_DIR_PATH',
                   'output-dir': 'OUTPUT_PATH'
                  }
+
+# Platform-specific cflags and ldflags
+
+cflags = {
+          'armeabi': '-fpic -march=armv5te -mtune=xscale -msoft-float -O2 -g -fomit-frame-pointer -fstrict-aliasing -funswitch-loops -finline-limit=300',
+          'armeabi-v7a': '-fpic -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=softfp -O2 -g -fomit-frame-pointer -fstrict-aliasing -funswitch-loops -finline-limit=300',
+          'x86': '-fomit-frame-pointer -fstrict-aliasing -funswitch-loops -finline-limit=300 -O2 -g',
+          'mips': '-fpic -finline-functions -fmessage-length=0 -fno-inline-functions-called-once -fgcse-after-reload -frerun-cse-after-loop -frename-registers -O2 -g -fomit-frame-pointer -funswitch-loops -finline-limit=300'
+         }
+
+ldflags = {
+           'armeabi': ' ',
+           'armeabi-v7a': '-march=armv7-a -Wl,--fix-cortex-a8 ',
+           'x86': ' ',
+           'mips': ' '
+          }
 
 def execute_command(command, use_shell = True, output=sys.stdout):
     """
@@ -82,7 +98,7 @@ def loadopts():
     parser = argparse.ArgumentParser(description='A script to build Python for Android for a provided set of platforms.')
     parser.add_argument('--ndk-toolchains-dir', help='Path to ndk standalone toolchains', metavar='PATH/TO/ANDROID/TOOLCHAINS')
     parser.add_argument('--ndk-toolchain-suffix', help='Toolchain directory suffix, usually the compiler version', metavar='4.9')
-    parser.add_argument('--platforms', help='Comma-separated list of target platforms', metavar='arm,x86,mips')
+    parser.add_argument('--platforms', help='Comma-separated list of target platforms', metavar='armeabi,x86,mips')
     parser.add_argument('--python-source', help='Path to Python sources', metavar='PATH/TO/CPYTHON/SOURCE/TREE')
     parser.add_argument('--build-dir', help='Path to building directory', metavar='PATH/TO/BUILD/DIR')
     parser.add_argument('--output-dir', help='Path to output directory', metavar='PATH/TO/OUTPUT/DIRECTORY')
@@ -179,7 +195,7 @@ print('Stage 3: Building android python')
 for arch in archs.keys():
     print('Building for {arch}'.format(arch=arch))
     toolchain = archs[arch]
-    if len(ndk_toolchain_suffix) > 0:
+    if len(ndk_toolchain_suffix) > 1:
         toolchain += '-{suffix}'.format(suffix=ndk_toolchain_suffix)
     toolchain_path = '{ndkpath}/{toolchain}'.format(ndkpath=ndk_toolchain_path, toolchain=toolchain)
     os.environ['PATH'] = '{toolpath}/bin:'.format(toolpath=toolchain_path) + envpath
@@ -192,8 +208,8 @@ for arch in archs.keys():
                   ['make', 'install']
                  ]
 # FIXME: Add building position-independent executables without breaking shared library build.
-    os.environ['CFLAGS'] = '--sysroot=' + and_sysroot + ' -I{pysource}/FIXLOCALE'.format(pysource=py_sourcedir) #+ ' -fPIE'
-    os.environ['LDFLAGS'] = '--sysroot=' + and_sysroot + ' -L{builddir}'.format(builddir=pyand_builddir) #+ ' -fPIE -pie' 
+    os.environ['CFLAGS'] = cflags[arch] + ' -ffunction-sections -funwind-tables -no-canonical-prefixes' + ' --sysroot=' + and_sysroot + ' -I{pysource}/FIXLOCALE'.format(pysource=py_sourcedir) #+ ' -fPIE'
+    os.environ['LDFLAGS'] = ldflags[arch] + '-no-canonical-prefixes ' +  ' --sysroot=' + and_sysroot + ' -L{builddir}'.format(builddir=pyand_builddir) #+ ' -fPIE -pie' 
 
     if not os.path.isdir(pyand_builddir):
         os.makedirs(pyand_builddir)
